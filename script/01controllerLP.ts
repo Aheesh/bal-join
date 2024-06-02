@@ -25,7 +25,7 @@ async function contollerLP() {
   const amountIn = ["100000000000000000", "100000000000000000"];
 
   //Controller Contract Address
-  const controllerAddress = "0x72457677ce1f3b374342c7d68ddc0655dee744a4";
+  const controllerAddress = "0x86393d64dff5cb19455a6e8a7ce51cd6f92bc00c";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -49,7 +49,7 @@ async function contollerLP() {
   const vaultID = await controllerContract.getVault();
   console.log("VaultID check response ", vaultID);
 
-  //EOA approve controller contract to spend tokenA
+  //load token contract tokenA
 
   const tokenAContract = new ethers.Contract(tokenA, tokenAABI.abi, wallet);
 
@@ -127,7 +127,7 @@ async function contollerLP() {
     vaultAllowanceTokenA
   );
 
-  //EOA approve controller to spend token B
+  //Load token Contract - token B
   const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet);
 
   //check balance of EOA for tokenB
