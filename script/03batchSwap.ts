@@ -33,8 +33,8 @@ async function runBatchSwap() {
       {
         poolId:
           "0x30347b6dedbec9df3d364926b2b37de4b8ba4ecb000100000000000000000693",
-        assetInIndex: 1,
-        assetOutIndex: 2,
+        assetInIndex: 0,
+        assetOutIndex: 1,
         amount: String(1e15),
         userData: "0x",
       },
@@ -51,18 +51,18 @@ async function runBatchSwap() {
       sender: address,
       toInternalBalance: false,
     },
-    limits: [value, "0", "0"],
+    limits: [value, "0"],
     deadline: Math.ceil(Date.now() / 1000) + 60,
   });
 
   const tokenA = contracts.ERC20(
     "0x6431AF84d34F0522cAA58b221d94A150B5AdAC69",
-    provider
+    signer
   );
 
   const tokenB = contracts.ERC20(
     "0xeA8AE08513f8230cAA8d031D28cB4Ac8CE720c68",
-    provider
+    signer
   );
 
   let tokenABalance = await tokenA.balanceOf(address);
@@ -70,6 +70,44 @@ async function runBatchSwap() {
 
   console.log("Token A balance before swap:", formatUnits(tokenABalance, 18));
   console.log("Token B balance before swap:", formatUnits(tokenBBalance, 18));
+
+  //Check the Vault allowance for Token A from EOA
+  let vaultAllowanceTokenA = await tokenA.allowance(
+    address,
+    contracts.vault.address
+  );
+  console.log("Vault allowance for TokenA from EOA", vaultAllowanceTokenA);
+
+  if (vaultAllowanceTokenA.lt(parseEther(value))) {
+    console.log("Vault A allowance is less than value, approving...💸 💸 💸");
+    const approveTx = await tokenA.approve(contracts.vault.address, value);
+    await approveTx.wait();
+
+    vaultAllowanceTokenA = await tokenA.allowance(
+      address,
+      contracts.vault.address
+    );
+    console.log("Vault allowance for TokenA from EOA ", vaultAllowanceTokenA);
+  }
+
+  //Check the Vault allowance for Token B from EOA
+  let vaultAllowanceTokenB = await tokenB.allowance(
+    address,
+    contracts.vault.address
+  );
+  console.log("Vault allowance for TokenB from EOA", vaultAllowanceTokenB);
+
+  if (vaultAllowanceTokenB.lt(parseEther(value))) {
+    console.log("Vault A allowance is less than value, approving...💸 💸 💸");
+    const approveTx = await tokenB.approve(contracts.vault.address, value);
+    await approveTx.wait();
+
+    vaultAllowanceTokenA = await tokenB.allowance(
+      address,
+      contracts.vault.address
+    );
+    console.log("Vault allowance for TokenB from EOA ", vaultAllowanceTokenB);
+  }
 
   await signer.sendTransaction({
     data: encodeBatchSwapData,
