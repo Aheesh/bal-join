@@ -32,7 +32,7 @@ async function runBatchSwap() {
     swaps: [
       {
         poolId:
-          "0x30347b6dedbec9df3d364926b2b37de4b8ba4ecb000100000000000000000693",
+          "0x788d9192a995da7c082d88caeab1703e7d1cf89f000100000000000000000694",
         assetInIndex: 0,
         assetOutIndex: 1,
         amount: String(1e15),

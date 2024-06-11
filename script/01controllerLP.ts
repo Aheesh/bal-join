@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import contractABI from "../abi/Controller.json";
 import tokenAABI from "../abi/PlayerAToken.json";
 import tokenBABI from "../abi/PlayerBToken.json";
+import tokenDrawABI from "../abi/DrawToken.json";
 
 async function contollerLP() {
   // create a new provider
@@ -22,10 +23,14 @@ async function contollerLP() {
   const signerAddress = await wallet.getAddress();
   console.log("Signer address:", signerAddress);
 
-  const amountIn = ["100000000000000000", "100000000000000000"];
+  const amountIn = [
+    "300000000000000000",
+    "100000000000000000",
+    "600000000000000000",
+  ];
 
   //Controller Contract Address
-  const controllerAddress = "0x86393d64dff5cb19455a6e8a7ce51cd6f92bc00c";
+  const controllerAddress = "0xd1c6df03c4c0a2260721d08db4c26a009dc68149";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -39,46 +44,21 @@ async function contollerLP() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[1];
+  const tokenA = addresses[0];
   console.log("Token A: ", tokenA);
 
   const tokenB = addresses[2];
   console.log("Token B: ", tokenB);
+
+  const tokenDraw = addresses[1];
+  console.log("Token Draw: ", tokenDraw);
 
   //get the vaultID
   const vaultID = await controllerContract.getVault();
   console.log("VaultID check response ", vaultID);
 
   //load token contract tokenA
-
   const tokenAContract = new ethers.Contract(tokenA, tokenAABI.abi, wallet);
-
-  //Check balance of tokenA with EOA
-  // const EOATokenABalanceCheck = await tokenAContract.checkBalance(
-  //   wallet.address
-  // );
-
-  // console.log("Token A - Balance of EOA", EOATokenABalanceCheck);
-
-  // //Approve Controller to transfer TokenA
-  // const approveATx = await tokenAContract.approve(
-  //   controllerAddress,
-  //   amountIn[0]
-  // );
-  // console.log("Approve Vault to transfer token A:", approveATx.hash);
-
-  // const approveReceipt = await approveATx.wait();
-  // console.log("Approve transaction mined:", approveReceipt.transactionHash);
-
-  // //Check the Controller allowance for Token A
-  // const controllerAllowanceTokenA = await tokenAContract.allowance(
-  //   wallet.address,
-  //   controllerAddress
-  // );
-  // console.log(
-  //   "Controller allowance from EOA for Token A",
-  //   controllerAllowanceTokenA
-  // );
 
   //transfer tokenA to Controller
   const transferATx = await tokenAContract.transfer(
@@ -130,39 +110,6 @@ async function contollerLP() {
   //Load token Contract - token B
   const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet);
 
-  //check balance of EOA for tokenB
-  // const EOAtokenBBalanceCheck = await tokenBContract.balanceOf(wallet);
-  // console.log("Token B - Balance on EOA", EOAtokenBBalanceCheck);
-
-  // //Approve Controller to transfer Token B (EOA - via Controller to Vault)
-  // const approveBTx = await tokenBContract.approve(
-  //   controllerAddress,
-  //   amountIn[1],
-  //   {
-  //     gasLimit: 500000,
-  //   }
-  // );
-  // console.log(
-  //   "Approve token B to be spent by Controller transaction sent:",
-  //   approveBTx.hash
-  // );
-
-  // const approveBReceipt = await approveBTx.wait();
-  // console.log(
-  //   "Approve token B to be spent by Controller transaction mined:",
-  //   approveBReceipt.transactionHash
-  // );
-
-  // //Check the Controller allowance for Token B
-  // const controllerAllowanceTokenB = await tokenBContract.allowance(
-  //   wallet.address,
-  //   controllerAddress
-  // );
-  // console.log(
-  //   "Controller allowance from EOA for Token B",
-  //   controllerAllowanceTokenB
-  // );
-
   //Transfer Token B from EOA to Controller
   const transferBTx = await tokenBContract.transfer(
     controllerAddress,
@@ -207,6 +154,58 @@ async function contollerLP() {
     vaultAllowanceTokenB
   );
 
+  //DrawToken
+  //load token contract tokenDraw
+  const tokenDrawContract = new ethers.Contract(
+    tokenDraw,
+    tokenDrawABI.abi,
+    wallet
+  );
+
+  //Transfer Token Draw from EOA to Controller
+  const transferDrawTx = await tokenDrawContract.transfer(
+    controllerAddress,
+    amountIn[2] // 1 Token Draw
+  );
+  console.log(
+    "Transfer of Token Draw to Controller transaction sent:",
+    transferDrawTx.hash
+  );
+
+  const transferReceiptDraw = await transferDrawTx.wait();
+  console.log(
+    "Transfer of Token Draw to Controller transaction mined:",
+    transferReceiptDraw.transactionHash
+  );
+
+  const controllerTokenDrawBalanceCheck = await tokenDrawContract.balanceOf(
+    controllerAddress
+  );
+  console.log(
+    "Token Draw - Controller contract balance of token Draw",
+    controllerTokenDrawBalanceCheck
+  );
+
+  //Controller approve Vault to transfer TokenB
+  const vaultTokenDrawFromContoller = await controllerContract.approveVault(
+    tokenDraw,
+    amountIn[2] // 1 Token Draw
+  );
+  console.log(
+    "Controller approved Vault to transfer Token Draw",
+    vaultTokenDrawFromContoller
+  );
+
+  //Check the Vault allowance for Token B from Controller
+  const vaultAllowanceTokenDraw = await tokenDrawContract.allowance(
+    controllerAddress,
+    vaultID
+  );
+  console.log(
+    "Vault allowance for Token Draw from Controller",
+    vaultAllowanceTokenB
+  );
+
   // Sending the function call to the contract
   const poolID = await controllerContract.getPoolId();
   //   await txResponse.wait();
@@ -235,38 +234,8 @@ async function contollerLP() {
       await controllerContract.getJoinExitEnabled()
     );
   }
-  //   const approveA = await controllerContract.approveToken(
-  //     tokenA,
-  //     "1000000000000000000"
-  //   );
-  //   await approveA.wait();
-  //   console.log("Token A Approved: ", approveA.hash);
-
-  //   const approveB = await controllerContract.approveToken(
-  //     tokenB,
-  //     "1000000000000000000"
-  //   );
-  //   await approveB.wait();
-  //   console.log("Token B Approved: ", approveB.hash);
-
-  //   const tokenATransfer = await controllerContract.transferToken(
-  //     tokenA,
-  //     amountIn[0],
-  //     { gasLimit: 500000 }
-  //   );
-  //   await tokenATransfer.wait();
-  //   console.log("Token A transfer to controller");
-
-  //   const tokenBtransfer = await controllerContract.transferToken(
-  //     tokenB,
-  //     amountIn[1],
-  //     { gasLimit: 500000 }
-  //   );
-  //   await tokenBtransfer.wait();
-  //   console.log("Token B transfer to controller");
 
   const initPool = await controllerContract.initPool(
-    //[tokenA, tokenB],
     addresses,
     amountIn,
     { gasLimit: 500000 } // Set the gas limit for the transaction
