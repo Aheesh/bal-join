@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import contractABI from "../abi/Controller.json";
 import tokenAABI from "../abi/PlayerAToken.json";
 import tokenBABI from "../abi/PlayerBToken.json";
+import tokenDrawABI from "../abi/DrawToken.json";
 
 async function swapToken() {
   // create a new provider
@@ -30,7 +31,7 @@ async function swapToken() {
   console.log("Signer address 2:", signerAddress2);
 
   //Controller Contract Address
-  const controllerAddress = "0x86393d64dff5cb19455a6e8a7ce51cd6f92bc00c";
+  const controllerAddress = "0xd1c6df03c4c0a2260721d08db4c26a009dc68149";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -43,11 +44,14 @@ async function swapToken() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[1];
+  const tokenA = addresses[3];
   console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[2];
+  const tokenB = addresses[1];
   console.log("Token B: ", tokenB);
+
+  const tokenDraw = addresses[2];
+  console.log("Token Draw: ", tokenDraw);
 
   //load token contract tokenA
 
@@ -107,6 +111,40 @@ async function swapToken() {
   console.log(
     "Token B - Wallet 2 balance of token B",
     wallet2TokenBBalanceCheck
+  );
+
+  //Load token Contract - token Draw
+  const tokenDrawContract = new ethers.Contract(
+    tokenDraw,
+    tokenDrawABI.abi,
+    wallet
+  );
+
+  //Transfer Token B from Wallet 1 to Wallet 2
+  const transferDrawTx = await tokenDrawContract.transfer(
+    wallet2.address,
+    "1000000000000000000", // 1 Token Draw
+    {
+      gasLimit: 500000,
+    }
+  );
+  console.log(
+    "Transfer of Token Draw to Wallet 2 transaction sent:",
+    transferDrawTx.hash
+  );
+
+  const transferReceiptDraw = await transferDrawTx.wait();
+  console.log(
+    "Transfer of Token Draw to Wallet 2 transaction mined:",
+    transferReceiptDraw.transactionHash
+  );
+
+  const wallet2TokenDrawBalanceCheck = await tokenDrawContract.balanceOf(
+    wallet2.address
+  );
+  console.log(
+    "Token Draw - Wallet 2 balance of token Draw",
+    wallet2TokenDrawBalanceCheck
   );
 }
 
