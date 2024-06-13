@@ -32,7 +32,7 @@ async function runBatchSwap() {
     swaps: [
       {
         poolId:
-          "0x788d9192a995da7c082d88caeab1703e7d1cf89f000100000000000000000694",
+          "0xf319484916d3987293543968be22d8ef0522905c000100000000000000000698",
         assetInIndex: 0,
         assetOutIndex: 1,
         amount: String(1e15),
@@ -56,12 +56,12 @@ async function runBatchSwap() {
   });
 
   const tokenA = contracts.ERC20(
-    "0x6431AF84d34F0522cAA58b221d94A150B5AdAC69",
+    "0xeA8AE08513f8230cAA8d031D28cB4Ac8CE720c68",
     signer
   );
 
   const tokenB = contracts.ERC20(
-    "0xeA8AE08513f8230cAA8d031D28cB4Ac8CE720c68",
+    "0x6431AF84d34F0522cAA58b221d94A150B5AdAC69",
     signer
   );
 
@@ -102,7 +102,7 @@ async function runBatchSwap() {
     const approveTx = await tokenB.approve(contracts.vault.address, value);
     await approveTx.wait();
 
-    vaultAllowanceTokenA = await tokenB.allowance(
+    vaultAllowanceTokenB = await tokenB.allowance(
       address,
       contracts.vault.address
     );
