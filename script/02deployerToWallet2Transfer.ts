@@ -5,6 +5,7 @@ import contractABI from "../abi/Controller.json";
 import tokenAABI from "../abi/PlayerAToken.json";
 import tokenBABI from "../abi/PlayerBToken.json";
 import tokenDrawABI from "../abi/DrawToken.json";
+import tokenStableABI from "../abi/StableToken.json";
 
 async function swapToken() {
   // create a new provider
@@ -31,7 +32,7 @@ async function swapToken() {
   console.log("Signer address 2:", signerAddress2);
 
   //Controller Contract Address
-  const controllerAddress = "0xd1c6df03c4c0a2260721d08db4c26a009dc68149";
+  const controllerAddress = "0xbbe4ec8d7b9a227201aaf206157e21b6eb00f370";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -44,107 +45,51 @@ async function swapToken() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[3];
+  const tokenA = addresses[4];
   console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[1];
+  const tokenB = addresses[2];
   console.log("Token B: ", tokenB);
 
-  const tokenDraw = addresses[2];
+  const tokenDraw = addresses[3];
   console.log("Token Draw: ", tokenDraw);
+
+  const tokenStable = addresses[1];
+  console.log("Stable Token:", tokenStable);
 
   //load token contract tokenA
 
-  const tokenAContract = new ethers.Contract(tokenA, tokenAABI.abi, wallet);
-
-  //transfer tokenA from Wallet 1 to Wallet 2
-  const transferATx = await tokenAContract.transfer(
-    wallet2.address,
-    "1000000000000000000", // 1 Token A
-    {
-      gasLimit: 500000,
-    }
-  );
-  console.log(
-    "Transfer of token A to EOA 2 transaction sent:",
-    transferATx.hash
-  );
-
-  const transferReceiptA = await transferATx.wait();
-  console.log(
-    "Transfer of Token A to EOA 2 transaction mined:",
-    transferReceiptA.transactionHash
-  );
-
-  const wallet2TokenABalanceCheck = await tokenAContract.checkBalance(
-    wallet2.address
-  );
-  console.log(
-    "TokenA - Balance of TokenA with EOA 2 ",
-    wallet2TokenABalanceCheck
-  );
-  //Load token Contract - token B
-  const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet);
-
-  //Transfer Token B from Wallet 1 to Wallet 2
-  const transferBTx = await tokenBContract.transfer(
-    wallet2.address,
-    "1000000000000000000", // 1 Token B
-    {
-      gasLimit: 500000,
-    }
-  );
-  console.log(
-    "Transfer of Token B to Wallet 2 transaction sent:",
-    transferBTx.hash
-  );
-
-  const transferReceiptB = await transferBTx.wait();
-  console.log(
-    "Transfer of Token B to Wallet 2 transaction mined:",
-    transferReceiptB.transactionHash
-  );
-
-  const wallet2TokenBBalanceCheck = await tokenBContract.balanceOf(
-    wallet2.address
-  );
-  console.log(
-    "Token B - Wallet 2 balance of token B",
-    wallet2TokenBBalanceCheck
-  );
-
-  //Load token Contract - token Draw
-  const tokenDrawContract = new ethers.Contract(
-    tokenDraw,
-    tokenDrawABI.abi,
+  const tokenStableContract = new ethers.Contract(
+    tokenStable,
+    tokenStableABI.abi,
     wallet
   );
 
-  //Transfer Token B from Wallet 1 to Wallet 2
-  const transferDrawTx = await tokenDrawContract.transfer(
+  //transfer tokenA from Wallet 1 to Wallet 2
+  const transferStableTx = await tokenStableContract.transfer(
     wallet2.address,
-    "1000000000000000000", // 1 Token Draw
+    "1000000000000000000", // 1 Token Stable
     {
       gasLimit: 500000,
     }
   );
   console.log(
-    "Transfer of Token Draw to Wallet 2 transaction sent:",
-    transferDrawTx.hash
+    "Transfer of token Stable to EOA 2 transaction sent:",
+    transferStableTx.hash
   );
 
-  const transferReceiptDraw = await transferDrawTx.wait();
+  const transferReceiptStable = await transferStableTx.wait();
   console.log(
-    "Transfer of Token Draw to Wallet 2 transaction mined:",
-    transferReceiptDraw.transactionHash
+    "Transfer of Token Stable to EOA 2 transaction mined:",
+    transferReceiptStable.transactionHash
   );
 
-  const wallet2TokenDrawBalanceCheck = await tokenDrawContract.balanceOf(
+  const wallet2TokenStableBalanceCheck = await tokenStableContract.balanceOf(
     wallet2.address
   );
   console.log(
-    "Token Draw - Wallet 2 balance of token Draw",
-    wallet2TokenDrawBalanceCheck
+    "Token Stable - Balance of TokenStable with EOA 2 ",
+    wallet2TokenStableBalanceCheck
   );
 }
 
