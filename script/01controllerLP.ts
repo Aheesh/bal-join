@@ -25,14 +25,14 @@ async function contollerLP() {
   console.log("Signer address:", signerAddress);
 
   const amountIn = [
-    "1000000000000000000", // 1 Stable token
-    "300000000000000000", //Token B
     "100000000000000000", //Draw Token
     "600000000000000000", //Token A
+    "300000000000000000", //Token B
+    "1000000000000000000", // 1 Stable token
   ];
 
   //Controller Contract Address
-  const controllerAddress = "0xbbe4ec8d7b9a227201aaf206157e21b6eb00f370";
+  const controllerAddress = "0xe8D526e39F0Ac69D489816c23615104bB969820C";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -46,16 +46,16 @@ async function contollerLP() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[4];
+  const tokenA = addresses[2];
   console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[2];
+  const tokenB = addresses[3];
   console.log("Token B: ", tokenB);
 
-  const tokenDraw = addresses[3];
+  const tokenDraw = addresses[1];
   console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[1];
+  const tokenStable = addresses[4];
   console.log("Stable Token:", tokenStable);
 
   //get the vaultID
@@ -68,7 +68,7 @@ async function contollerLP() {
   //transfer tokenA to Controller
   const transferATx = await tokenAContract.transfer(
     controllerAddress,
-    amountIn[3],
+    amountIn[1],
     {
       gasLimit: 500000,
     }
@@ -76,7 +76,7 @@ async function contollerLP() {
   console.log(
     "Transfer of token A to Controller transaction sent:%s amount:%s",
     transferATx.hash,
-    amountIn[3]
+    amountIn[1]
   );
 
   const transferReceiptA = await transferATx.wait();
@@ -85,7 +85,7 @@ async function contollerLP() {
     transferReceiptA.transactionHash
   );
 
-  const controllerTokenABalanceCheck = await tokenAContract.checkBalance(
+  const controllerTokenABalanceCheck = await tokenAContract.balanceOf(
     controllerAddress
   );
   console.log(
@@ -96,7 +96,7 @@ async function contollerLP() {
   //Controller approve Vault to transfer TokenA
   const vaultTokenAFromContoller = await controllerContract.approveVault(
     tokenA,
-    amountIn[3]
+    amountIn[1]
   );
   // console.log(
   //   "Controller approved Vault to transfer Token A",
@@ -119,11 +119,12 @@ async function contollerLP() {
   //Transfer Token B from EOA to Controller
   const transferBTx = await tokenBContract.transfer(
     controllerAddress,
-    amountIn[1]
+    amountIn[2]
   );
   console.log(
-    "Transfer of Token B to Controller transaction sent:",
-    transferBTx.hash
+    "Transfer of Token B to Controller transaction sent:%s amount:%s",
+    transferBTx.hash,
+    amountIn[2]
   );
 
   const transferReceiptB = await transferBTx.wait();
@@ -143,7 +144,7 @@ async function contollerLP() {
   //Controller approve Vault to transfer TokenB
   const vaultTokenBFromContoller = await controllerContract.approveVault(
     tokenB,
-    amountIn[1]
+    amountIn[2]
   );
   // console.log(
   //   "Controller approved Vault to transfer Token B",
@@ -171,11 +172,12 @@ async function contollerLP() {
   //Transfer Token Draw from EOA to Controller
   const transferDrawTx = await tokenDrawContract.transfer(
     controllerAddress,
-    amountIn[2] // 1 Token Draw
+    amountIn[0] // 1 Token Draw
   );
   console.log(
-    "Transfer of Token Draw to Controller transaction sent:",
-    transferDrawTx.hash
+    "Transfer of Token Draw to Controller transaction sent:%s amount:%s",
+    transferDrawTx.hash,
+    amountIn[0]
   );
 
   const transferReceiptDraw = await transferDrawTx.wait();
@@ -195,7 +197,7 @@ async function contollerLP() {
   //Controller approve Vault to transfer Draw
   const vaultTokenDrawFromContoller = await controllerContract.approveVault(
     tokenDraw,
-    amountIn[2] // 1 Token Draw
+    amountIn[0] // 1 Token Draw
   );
   // console.log(
   //   "Controller approved Vault to transfer Token Draw",
@@ -223,12 +225,12 @@ async function contollerLP() {
   //Transfer Stable Token from EOA to Controller
   const transferStableTx = await tokenStableContract.transfer(
     controllerAddress,
-    amountIn[0] //  Stable Token
+    amountIn[3] //  Stable Token
   );
   console.log(
-    "Transfer of Token Stable to Controller transaction sent:",
+    "Transfer of Token Stable to Controller transaction sent:%s amount:%s",
     transferStableTx.hash,
-    amountIn[0]
+    amountIn[3]
   );
 
   const transferReceiptStable = await transferStableTx.wait();
@@ -248,7 +250,7 @@ async function contollerLP() {
   //Controller approve Vault to transfer Stable Token
   const vaultTokenStableFromContoller = await controllerContract.approveVault(
     tokenStable,
-    amountIn[0] // Stable Token Transfer
+    amountIn[3] // Stable Token Transfer
   );
   // console.log(
   //   "Controller approved Vault to transfer Stable Token ",

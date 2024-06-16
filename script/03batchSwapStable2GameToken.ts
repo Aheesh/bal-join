@@ -32,7 +32,7 @@ async function runBatchSwap() {
     swaps: [
       {
         poolId:
-          "0xf319484916d3987293543968be22d8ef0522905c000100000000000000000698",
+          "0xa6a879f60710cbb415bba5bbc18805b013c26e0d00010000000000000000069b",
         assetInIndex: 0,
         assetOutIndex: 1,
         amount: String(1e15),
@@ -40,10 +40,10 @@ async function runBatchSwap() {
       },
     ],
     assets: [
-      "0x1966dc8ff30Bc4AeDEd27178642253b3cCC9AA3f",
+      "0xA8d14b3d9e2589CEA8644BB0f67EB90d21079f8B",
       //token Stable
-      "0x6431AF84d34F0522cAA58b221d94A150B5AdAC69",
-      //token B
+      "0x6B9C4119796C80Ced5a3884027985Fd31830555b",
+      //token Draw
     ],
     funds: {
       fromInternalBalance: false,
@@ -56,12 +56,12 @@ async function runBatchSwap() {
   });
 
   const tokenStable = contracts.ERC20(
-    "0x1966dc8ff30Bc4AeDEd27178642253b3cCC9AA3f",
+    "0xA8d14b3d9e2589CEA8644BB0f67EB90d21079f8B",
     signer
   );
 
   const tokenB = contracts.ERC20(
-    "0x6431AF84d34F0522cAA58b221d94A150B5AdAC69",
+    "0x6B9C4119796C80Ced5a3884027985Fd31830555b",
     signer
   );
 
@@ -128,7 +128,7 @@ async function runBatchSwap() {
     "Token Stable balance after swap:",
     formatUnits(tokenStableBalance, 18)
   );
-  console.log("Token B balance after swap:", formatUnits(tokenBBalance, 18));
+  console.log("Token Draw balance after swap:", formatUnits(tokenBBalance, 18));
 }
 
 try {
