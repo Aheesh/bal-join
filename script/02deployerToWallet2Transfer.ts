@@ -32,7 +32,7 @@ async function swapToken() {
   console.log("Signer address 2:", signerAddress2);
 
   //Controller Contract Address
-  const controllerAddress = "0xbbe4ec8d7b9a227201aaf206157e21b6eb00f370";
+  const controllerAddress = "0xe8D526e39F0Ac69D489816c23615104bB969820C";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -45,19 +45,19 @@ async function swapToken() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[4];
+  const tokenA = addresses[2];
   console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[2];
+  const tokenB = addresses[3];
   console.log("Token B: ", tokenB);
 
-  const tokenDraw = addresses[3];
+  const tokenDraw = addresses[1];
   console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[1];
+  const tokenStable = addresses[4];
   console.log("Stable Token:", tokenStable);
 
-  //load token contract tokenA
+  //load token contract token Stable
 
   const tokenStableContract = new ethers.Contract(
     tokenStable,
