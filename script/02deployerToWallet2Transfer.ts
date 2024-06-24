@@ -2,16 +2,37 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers } from "ethers";
 import contractABI from "../abi/Controller.json";
-import tokenAABI from "../abi/PlayerAToken.json";
-import tokenBABI from "../abi/PlayerBToken.json";
-import tokenDrawABI from "../abi/DrawToken.json";
-import tokenStableABI from "../abi/StableToken.json";
+// import tokenAABI from "../abi/PlayerAToken.json";
+// import tokenBABI from "../abi/PlayerBToken.json";
+// import tokenDrawABI from "../abi/DrawToken.json";
+import tokenStableABI from "../abi/tokenStable.json";
+
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 async function swapToken() {
+  // parse arguments for network
+  const argv = yargs(hideBin(process.argv))
+    .option("network", {
+      type: "string",
+      description: "The network to connect to",
+      default: "localhost",
+      demandOption: true,
+    })
+    .parseSync();
+
+  console.log(`Network: , ${argv.network}`);
+  const network = argv.network;
+
+  const providerApiKey = process.env.ALCHEMY_API_KEY;
+
   // create a new provider
   const provider = new ethers.providers.JsonRpcProvider(
-    "http://127.0.0.1:8545/"
+    network === "sepolia"
+      ? `https://eth-sepolia.g.alchemy.com/v2/${providerApiKey}`
+      : "http://127.0.0.1:8545/"
   );
+
   // get the signer account
   const pvtKey = process.env.ACCOUNT1_KEY;
   const pvtKey2 = process.env.ACCOUNT2_KEY;
@@ -32,29 +53,29 @@ async function swapToken() {
   console.log("Signer address 2:", signerAddress2);
 
   //Controller Contract Address
-  const controllerAddress = "0xf22f1DE0BaaaD7272191c2Ab989a4c3940b6ACb7";
+  const controllerAddress = "0x2b1C7Ed23718936Dc093994627791C5fcd2c7754";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
     wallet
   );
   //Get the tokens in the managed pool contract
-  const [addresses, balance, totalBalance] =
+  const [addresses, balance, lastUpdatedBlock] =
     await controllerContract.getPoolTokens();
   console.log("Pool Tokens Addresses: ", addresses);
   console.log("Pool Tokens Amounts: ", balance);
-  console.log("Total Pool Tokens Amount: ", totalBalance);
+  console.log("Last updated block: ", lastUpdatedBlock);
 
-  const tokenA = addresses[3];
-  console.log("Token A: ", tokenA);
+  // const tokenA = addresses[3];
+  // console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[2];
-  console.log("Token B: ", tokenB);
+  // const tokenB = addresses[2];
+  // console.log("Token B: ", tokenB);
 
-  const tokenDraw = addresses[4];
-  console.log("Token Draw: ", tokenDraw);
+  // const tokenDraw = addresses[4];
+  // console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[1];
+  const tokenStable = addresses[2];
   console.log("Stable Token:", tokenStable);
 
   //load token contract token Stable
