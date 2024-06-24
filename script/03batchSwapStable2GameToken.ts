@@ -32,18 +32,18 @@ async function runBatchSwap() {
     swaps: [
       {
         poolId:
-          "0xa6a879f60710cbb415bba5bbc18805b013c26e0d00010000000000000000069b",
+          "0x63437a18a0670f91c9dea518809b3aa5a59e77a00001000000000000000006a3",
         assetInIndex: 0,
         assetOutIndex: 1,
-        amount: String(1e15),
+        amount: String(1e7),
         userData: "0x",
       },
     ],
     assets: [
-      "0xA8d14b3d9e2589CEA8644BB0f67EB90d21079f8B",
+      "0x2e13f7644014F6E934E314F0371585845de7B986",
       //token Stable
-      "0x6B9C4119796C80Ced5a3884027985Fd31830555b",
-      //token Draw
+      "0xFE92134da38df8c399A90a540f20187D19216E05",
+      //token A
     ],
     funds: {
       fromInternalBalance: false,
@@ -56,12 +56,12 @@ async function runBatchSwap() {
   });
 
   const tokenStable = contracts.ERC20(
-    "0xA8d14b3d9e2589CEA8644BB0f67EB90d21079f8B",
+    "0x2e13f7644014F6E934E314F0371585845de7B986",
     signer
   );
 
   const tokenB = contracts.ERC20(
-    "0x6B9C4119796C80Ced5a3884027985Fd31830555b",
+    "0xFE92134da38df8c399A90a540f20187D19216E05",
     signer
   );
 
@@ -69,17 +69,20 @@ async function runBatchSwap() {
   let tokenBBalance = await tokenB.balanceOf(address);
 
   console.log(
-    "Token A balance before swap:",
+    "🐎 🐎 🐎 Stable Token 🐎 🐎 🐎  balance before swap:",
     formatUnits(tokenStableBalance, 18)
   );
-  console.log("Token B balance before swap:", formatUnits(tokenBBalance, 18));
+  console.log("Token A balance before swap:", formatUnits(tokenBBalance, 18));
 
   //Check the Vault allowance for Token Stable from EOA
   let vaultAllowanceTokenStable = await tokenStable.allowance(
     address,
     contracts.vault.address
   );
-  console.log("Vault allowance for TokenA from EOA", vaultAllowanceTokenStable);
+  console.log(
+    "Vault allowance for 🐎 🐎 🐎 Stable Token 🐎 🐎 🐎  from EOA",
+    vaultAllowanceTokenStable
+  );
 
   if (vaultAllowanceTokenStable.lt(parseEther(value))) {
     console.log("Vault A allowance is less than value, approving...💸 💸 💸");
@@ -126,7 +129,7 @@ async function runBatchSwap() {
 
   console.log(
     "Token Stable balance after swap:",
-    formatUnits(tokenStableBalance, 18)
+    formatUnits(tokenStableBalance, 6)
   );
   console.log("Token Draw balance after swap:", formatUnits(tokenBBalance, 18));
 }

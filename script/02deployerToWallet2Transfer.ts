@@ -21,7 +21,7 @@ async function swapToken() {
   //Get the EOA wallets
   const wallet = new ethers.Wallet(pvtKey, provider);
   const wallet2 = new ethers.Wallet(pvtKey2, provider);
-  const amountIn = "1000000000000000000";
+  const amountIn = "100000000";
 
   // get the address of the signer
   const signerAddress = await wallet.getAddress();
@@ -32,7 +32,7 @@ async function swapToken() {
   console.log("Signer address 2:", signerAddress2);
 
   //Controller Contract Address
-  const controllerAddress = "0xe8D526e39F0Ac69D489816c23615104bB969820C";
+  const controllerAddress = "0xf22f1DE0BaaaD7272191c2Ab989a4c3940b6ACb7";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -45,16 +45,16 @@ async function swapToken() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[2];
+  const tokenA = addresses[3];
   console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[3];
+  const tokenB = addresses[2];
   console.log("Token B: ", tokenB);
 
-  const tokenDraw = addresses[1];
+  const tokenDraw = addresses[4];
   console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[4];
+  const tokenStable = addresses[1];
   console.log("Stable Token:", tokenStable);
 
   //load token contract token Stable
@@ -65,10 +65,10 @@ async function swapToken() {
     wallet
   );
 
-  //transfer tokenA from Wallet 1 to Wallet 2
+  //transfer Stable from Wallet 1 to Wallet 2
   const transferStableTx = await tokenStableContract.transfer(
     wallet2.address,
-    "1000000000000000000", // 1 Token Stable
+    amountIn, // 100 Token Stable
     {
       gasLimit: 500000,
     }
