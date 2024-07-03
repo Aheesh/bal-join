@@ -5,7 +5,7 @@ import contractABI from "../abi/Controller.json";
 import tokenAABI from "../abi/PlayerAToken.json";
 import tokenBABI from "../abi/PlayerBToken.json";
 import tokenDrawABI from "../abi/DrawToken.json";
-import tokenStableABI from "../abi/tokenStable.json";
+import tokenStableABI from "../abi/tokenDEGEN.json";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -20,15 +20,18 @@ async function contollerLP() {
     })
     .parseSync();
 
-  console.log(`Network: , ${argv.network}`);
+  console.log(`Network: ${argv.network}`);
   const network = argv.network;
 
   const providerApiKey = process.env.ALCHEMY_API_KEY;
+  const providerBaseKey = process.env.BASE_PROVIDER_API_KEY;
 
   // create a new provider
   const provider = new ethers.providers.JsonRpcProvider(
     network === "sepolia"
       ? `https://eth-sepolia.g.alchemy.com/v2/${providerApiKey}`
+      : network === "base"
+      ? `https://base-mainnet.g.alchemy.com/v2/${providerBaseKey}`
       : "http://127.0.0.1:8545/"
   );
 
@@ -44,14 +47,14 @@ async function contollerLP() {
   console.log("Signer address:", signerAddress);
 
   const amountIn = [
-    "60000000000000000000", //60 Token A
-    "100000000", // 100 Stable token
-    "30000000000000000000", //30 Token B
-    "10000000000000000000", //10 Draw Token
+    "1000000000000000000000", // 1000 DEGEN token
+    "100000000000000000000", //100 Draw Token
+    "600000000000000000000", //600 Token A
+    "300000000000000000000", //300 Token B
   ];
 
   //Controller Contract Address
-  const controllerAddress = "0x2b1C7Ed23718936Dc093994627791C5fcd2c7754";
+  const controllerAddress = "0x835309AED8B04C52Fe0dAF35D90F7e5f9A7472Bd";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -65,16 +68,16 @@ async function contollerLP() {
   console.log("Pool Tokens Amounts: ", balance);
   console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[1];
+  const tokenA = addresses[3];
   console.log("Token A: ", tokenA);
 
-  const tokenB = addresses[3];
+  const tokenB = addresses[4];
   console.log("Token B: ", tokenB);
 
-  const tokenDraw = addresses[4];
+  const tokenDraw = addresses[2];
   console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[2];
+  const tokenStable = addresses[1];
   console.log("Stable Token:", tokenStable);
 
   //get the vaultID
@@ -84,86 +87,112 @@ async function contollerLP() {
   //load token contract tokenA
   const tokenAContract = new ethers.Contract(tokenA, tokenAABI.abi, wallet);
 
-  //transfer tokenA to Controller
-  const transferATx = await tokenAContract.transfer(
-    controllerAddress,
-    amountIn[0],
-    {
-      gasLimit: 500000,
-    }
-  );
-  console.log(
-    "Transfer of token A to Controller transaction sent:%s amount:%s",
-    transferATx.hash,
-    amountIn[0]
-  );
-
-  const transferReceiptA = await transferATx.wait();
-  console.log(
-    "Transfer of Token A to Controller transaction mined:",
-    transferReceiptA.transactionHash
-  );
-
-  const controllerTokenABalanceCheck = await tokenAContract.balanceOf(
-    controllerAddress
-  );
-  console.log(
-    "TokenA - Balance of TokenA with controller contract ",
-    controllerTokenABalanceCheck
-  );
-
-  //Controller approve Vault to transfer TokenA
-  const vaultTokenAFromContoller = await controllerContract.approveVault(
-    tokenA,
-    amountIn[0]
-  );
-
   //Check the Vault allowance for Token A from Controller
-  const vaultAllowanceTokenA = await tokenAContract.allowance(
+  let vaultAllowanceTokenA = await tokenAContract.allowance(
     controllerAddress,
     vaultID
   );
   console.log(
-    "Vault allowance for TokenA from Controller",
-    vaultAllowanceTokenA
+    `Vault allowance for TokenA from Controller : hex value %s , decimal value %s`,
+    vaultAllowanceTokenA.toHexString(),
+    BigInt(vaultAllowanceTokenA.toHexString()).toString()
+  );
+
+  //To prevent multiple approvals of Token A and transfer to Controller
+  if (BigInt(vaultAllowanceTokenA.toHexString()) < BigInt(amountIn[2])) {
+    //transfer tokenA to Controller
+    const transferATx = await tokenAContract.transfer(
+      controllerAddress,
+      BigInt(amountIn[2]) - BigInt(vaultAllowanceTokenA.toHexString()),
+      {
+        gasLimit: 500000,
+      }
+    );
+    console.log(
+      "Transfer of token A to Controller transaction sent:%s amount:%s",
+      transferATx.hash,
+      amountIn[2]
+    );
+
+    const transferReceiptA = await transferATx.wait();
+    console.log(
+      "Transfer of Token A to Controller transaction mined:",
+      transferReceiptA.transactionHash
+    );
+
+    const controllerTokenABalanceCheck = await tokenAContract.balanceOf(
+      controllerAddress
+    );
+    console.log(
+      "TokenA - Balance of TokenA with controller contract ",
+      controllerTokenABalanceCheck
+    );
+
+    //Controller approve Vault to transfer TokenA
+    const vaultTokenAFromContoller = await controllerContract.approveVault(
+      tokenA,
+      amountIn[2]
+    );
+  }
+  //Check the Vault allowance for Token A from Controller
+  vaultAllowanceTokenA = await tokenAContract.allowance(
+    controllerAddress,
+    vaultID
+  );
+  console.log(
+    `Vault allowance for TokenA from Controller : hex value %s , decimal value %s`,
+    vaultAllowanceTokenA.toHexString(),
+    BigInt(vaultAllowanceTokenA.toHexString()).toString()
   );
 
   //Load token Contract - token B
   const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet);
 
-  //Transfer Token B from EOA to Controller
-  const transferBTx = await tokenBContract.transfer(
-    controllerAddress,
-    amountIn[2]
-  );
-  console.log(
-    "Transfer of Token B to Controller transaction sent:%s amount:%s",
-    transferBTx.hash,
-    amountIn[2]
-  );
-
-  const transferReceiptB = await transferBTx.wait();
-  console.log(
-    "Transfer of Token B to Controller transaction mined:",
-    transferReceiptB.transactionHash
-  );
-
-  const controllerTokenBBalanceCheck = await tokenBContract.balanceOf(
-    controllerAddress
-  );
-  console.log(
-    "Token B - Controller contract balance of token B",
-    controllerTokenBBalanceCheck
-  );
-
-  //Controller approve Vault to transfer TokenB
-  const vaultTokenBFromContoller = await controllerContract.approveVault(
-    tokenB,
-    amountIn[2]
-  );
-
   //Check the Vault allowance for Token B from Controller
-  const vaultAllowanceTokenB = await tokenBContract.allowance(
+  let vaultAllowanceTokenB = await tokenBContract.allowance(
+    controllerAddress,
+    vaultID
+  );
+  console.log(
+    "Vault allowance for Token B from Controller",
+    vaultAllowanceTokenB.toHexString(),
+    BigInt(vaultAllowanceTokenB.toHexString())
+  );
+
+  if (BigInt(vaultAllowanceTokenB.toHexString()) < BigInt(amountIn[3])) {
+    //Transfer Token B from EOA to Controller
+    const transferBTx = await tokenBContract.transfer(
+      controllerAddress,
+      BigInt(amountIn[3]) - BigInt(vaultAllowanceTokenB.toHexString()) //Differenece in the amount transferred to controller contract
+    );
+    console.log(
+      "Transfer of Token B to Controller transaction sent:%s amount:%s",
+      transferBTx.hash,
+      amountIn[3]
+    );
+
+    const transferReceiptB = await transferBTx.wait();
+    console.log(
+      "Transfer of Token B to Controller transaction mined:",
+      transferReceiptB.transactionHash
+    );
+
+    const controllerTokenBBalanceCheck = await tokenBContract.balanceOf(
+      controllerAddress
+    );
+    console.log(
+      "Token B - Controller contract balance of token B",
+      controllerTokenBBalanceCheck
+    );
+
+    //Controller approve Vault to transfer TokenB
+    const vaultTokenBFromContoller = await controllerContract.approveVault(
+      tokenB,
+      amountIn[3]
+    );
+  }
+  //Check the Vault allowance for Token B from Controller
+  vaultAllowanceTokenB = await tokenBContract.allowance(
     controllerAddress,
     vaultID
   );
@@ -179,45 +208,57 @@ async function contollerLP() {
     wallet
   );
 
-  //Transfer Token Draw from EOA to Controller
-  const transferDrawTx = await tokenDrawContract.transfer(
-    controllerAddress,
-    amountIn[3] // 1 Token Draw
-  );
-  console.log(
-    "Transfer of Token Draw to Controller transaction sent:%s amount:%s",
-    transferDrawTx.hash,
-    amountIn[3]
-  );
-
-  const transferReceiptDraw = await transferDrawTx.wait();
-  console.log(
-    "Transfer of Token Draw to Controller transaction mined:",
-    transferReceiptDraw.transactionHash
-  );
-
-  const controllerTokenDrawBalanceCheck = await tokenDrawContract.balanceOf(
-    controllerAddress
-  );
-  console.log(
-    "Token Draw - Controller contract balance of token Draw",
-    controllerTokenDrawBalanceCheck
-  );
-
-  //Controller approve Vault to transfer Draw
-  const vaultTokenDrawFromContoller = await controllerContract.approveVault(
-    tokenDraw,
-    amountIn[3] // Token Draw
-  );
-
   //Check the Vault allowance for Token Draw from Controller
-  const vaultAllowanceTokenDraw = await tokenDrawContract.allowance(
+  let vaultAllowanceTokenDraw = await tokenDrawContract.allowance(
     controllerAddress,
     vaultID
   );
   console.log(
     "Vault allowance for Token Draw from Controller",
-    vaultAllowanceTokenDraw
+    vaultAllowanceTokenDraw.toHexString(),
+    BigInt(vaultAllowanceTokenDraw.toHexString())
+  );
+  if (BigInt(vaultAllowanceTokenDraw.toHexString()) < BigInt(amountIn[1])) {
+    //Transfer Token Draw from EOA to Controller
+    const transferDrawTx = await tokenDrawContract.transfer(
+      controllerAddress,
+      BigInt(amountIn[1]) - BigInt(vaultAllowanceTokenDraw.toHexString()) // Difference in the amount transferred to controller contract
+    );
+    console.log(
+      "Transfer of Token Draw to Controller transaction sent:%s amount:%s",
+      transferDrawTx.hash,
+      amountIn[1]
+    );
+
+    const transferReceiptDraw = await transferDrawTx.wait();
+    console.log(
+      "Transfer of Token Draw to Controller transaction mined:",
+      transferReceiptDraw.transactionHash
+    );
+
+    const controllerTokenDrawBalanceCheck = await tokenDrawContract.balanceOf(
+      controllerAddress
+    );
+    console.log(
+      "Token Draw - Controller contract balance of token Draw",
+      controllerTokenDrawBalanceCheck
+    );
+
+    //Controller approve Vault to transfer Draw
+    const vaultTokenDrawFromContoller = await controllerContract.approveVault(
+      tokenDraw,
+      amountIn[1] // Token Draw
+    );
+  }
+  //Check the Vault allowance for Token Draw from Controller
+  vaultAllowanceTokenDraw = await tokenDrawContract.allowance(
+    controllerAddress,
+    vaultID
+  );
+  console.log(
+    "Vault allowance for Token Draw from Controller",
+    vaultAllowanceTokenDraw.toHexString(),
+    BigInt(vaultAllowanceTokenDraw.toHexString())
   );
 
   //StableToken
@@ -228,39 +269,50 @@ async function contollerLP() {
     wallet
   );
 
-  //Transfer Stable Token from EOA to Controller
-  const transferStableTx = await tokenStableContract.transfer(
-    controllerAddress,
-    amountIn[1] //  Stable Token
-  );
-  console.log(
-    "Transfer of Token Stable to Controller transaction sent:%s amount:%s",
-    transferStableTx.hash,
-    amountIn[1]
-  );
-
-  const transferReceiptStable = await transferStableTx.wait();
-  console.log(
-    "Transfer of Token Stable to Controller transaction mined:",
-    transferReceiptStable.transactionHash
-  );
-
-  const controllerTokenStableBalanceCheck = await tokenStableContract.balanceOf(
-    controllerAddress
-  );
-  console.log(
-    "Token Stable - Controller contract balance of token Draw",
-    controllerTokenStableBalanceCheck
-  );
-
-  //Controller approve Vault to transfer Stable Token
-  const vaultTokenStableFromContoller = await controllerContract.approveVault(
-    tokenStable,
-    amountIn[1] // Stable Token Transfer
-  );
-
   //Check the Vault allowance for stable token from Controller
-  const vaultAllowanceTokenStable = await tokenStableContract.allowance(
+  let vaultAllowanceTokenStable = await tokenStableContract.allowance(
+    controllerAddress,
+    vaultID
+  );
+  console.log(
+    "Vault allowance for Stable Token from Controller",
+    vaultAllowanceTokenStable.toHexString(),
+    BigInt(vaultAllowanceTokenStable.toHexString())
+  );
+
+  if (BigInt(vaultAllowanceTokenStable.toHexString()) < BigInt(amountIn[0])) {
+    //Transfer Stable Token from EOA to Controller
+    const transferStableTx = await tokenStableContract.transfer(
+      controllerAddress,
+      BigInt(amountIn[0]) - BigInt(vaultAllowanceTokenStable.toHexString()) //  Difference in the amount transferred to controller contract DEGEN or STABLE
+    );
+    console.log(
+      "Transfer of Token Stable to Controller transaction sent:%s amount:%s",
+      transferStableTx.hash,
+      amountIn[0]
+    );
+
+    const transferReceiptStable = await transferStableTx.wait();
+    console.log(
+      "Transfer of Token Stable to Controller transaction mined:",
+      transferReceiptStable.transactionHash
+    );
+
+    const controllerTokenStableBalanceCheck =
+      await tokenStableContract.balanceOf(controllerAddress);
+    console.log(
+      "Token Stable - Controller contract balance of token Draw",
+      controllerTokenStableBalanceCheck
+    );
+
+    //Controller approve Vault to transfer Stable Token
+    const vaultTokenStableFromContoller = await controllerContract.approveVault(
+      tokenStable,
+      amountIn[0] // Stable Token Transfer
+    );
+  }
+  //Check the Vault allowance for stable token from Controller
+  vaultAllowanceTokenStable = await tokenStableContract.allowance(
     controllerAddress,
     vaultID
   );
@@ -301,7 +353,7 @@ async function contollerLP() {
   const initPool = await controllerContract.initPool(
     addresses,
     amountIn,
-    { gasLimit: 900000 } // Set the gas limit for the transaction
+    { gasLimit: 900010 } // Set the gas limit for the transaction
   );
   await initPool.wait();
   console.log("Init Pool: ", initPool.hash);
