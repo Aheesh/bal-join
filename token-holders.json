@@ -1,0 +1,45 @@
+{
+  "playerA": [
+    {
+      "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+      "balance": "581.658773617176747822"
+    },
+    {
+      "address": "0x83fAf728815eC62723206e7C9e63dddB432cF025",
+      "balance": "15.511113695731518532"
+    },
+    {
+      "address": "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad",
+      "balance": "2.830112687091733646"
+    }
+  ],
+  "playerB": [
+    {
+      "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+      "balance": "297.098986420031149148"
+    },
+    {
+      "address": "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad",
+      "balance": "1.928657766178300552"
+    },
+    {
+      "address": "0x83fAf728815eC62723206e7C9e63dddB432cF025",
+      "balance": "0.9723558137905503"
+    }
+  ],
+  "draw": [
+    {
+      "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+      "balance": "98.081258958630550963"
+    },
+    {
+      "address": "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad",
+      "balance": "1.918741041369449037"
+    }
+  ],
+  "uniqueAddresses": [
+    "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+    "0x83fAf728815eC62723206e7C9e63dddB432cF025",
+    "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad"
+  ]
+}

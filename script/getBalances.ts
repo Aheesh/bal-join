@@ -3,6 +3,8 @@ import { BalancerSDK, Network } from '@balancer-labs/sdk';
 import { ethers } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import axios from 'axios';
+import { Contract } from 'ethers';
+import { Interface } from '@ethersproject/abi';
 
 // Configuration
 const POOL_ID = '0xc8503e1a4e439800dea3424cbfc085cbeb6c3bfe000100000000000000000172';
@@ -107,104 +109,58 @@ async function getPoolAndTokenInfo(addressesToCheck: string[]) {
   }
 }
 
-async function getTokenHolders(tokenContract: ethers.Contract, fromBlock: number) {
-    const holders = new Set<string>();
+const BALANCER_VAULT = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
+
+async function getVaultTransferRecipients(tokenAddresses: string[], fromBlock: number) {
+    const recipients = new Set<string>();
     const BLOCK_RANGE = 100000;
-    
-    // Get current block
     const latestBlock = await provider.getBlockNumber();
-    console.log(`Scanning from block ${fromBlock} to ${latestBlock}`);
     
-    // Query in chunks
+    // ERC20 Transfer event interface
+    const erc20Interface = new Interface([
+        'event Transfer(address indexed from, address indexed to, uint256 value)'
+    ]);
+
     for (let startBlock = fromBlock; startBlock <= latestBlock; startBlock += BLOCK_RANGE) {
         const endBlock = Math.min(startBlock + BLOCK_RANGE - 1, latestBlock);
-        
         console.log(`Processing blocks ${startBlock} to ${endBlock}...`);
-        
+
         try {
-            const transferEvents = await tokenContract.queryFilter(
-                tokenContract.filters.Transfer(),
-                startBlock,
-                endBlock
-            );
-            
-            console.log(`Found ${transferEvents.length} transfer events`);
-            
-            // Process events in batches to avoid too many concurrent RPC calls
-            const batchSize = 50;
-            for (let i = 0; i < transferEvents.length; i += batchSize) {
-                const batch = transferEvents.slice(i, i + batchSize);
-                await Promise.all(batch.map(async (event) => {
-                    const [from, to] = event.args! as [string, string, ethers.BigNumber];
-                    
-                    const [fromBalance, toBalance] = await Promise.all([
-                        tokenContract.balanceOf(from),
-                        tokenContract.balanceOf(to)
-                    ]);
-                    
-                    if (fromBalance.eq(0)) {
-                        holders.delete(from);
-                    } else {
-                        holders.add(from);
-                    }
-                    
-                    if (toBalance.gt(0)) {
-                        holders.add(to);
-                    }
-                }));
+            // Create filter for transfers FROM the Balancer Vault
+            for (const tokenAddress of tokenAddresses) {
+                const logs = await provider.getLogs({
+                    fromBlock: startBlock,
+                    toBlock: endBlock,
+                    address: tokenAddress,
+                    topics: [
+                        erc20Interface.getEventTopic('Transfer'),
+                        ethers.utils.hexZeroPad(BALANCER_VAULT, 32),
+                    ]
+                });
+
+                logs.forEach(log => {
+                    const parsedLog = erc20Interface.parseLog(log);
+                    const recipient = ethers.utils.getAddress(parsedLog.args.to);
+                    recipients.add(recipient);
+                });
+
+                console.log(`Found ${recipients.size} unique recipients so far`);
             }
-            
-            console.log(`Current unique holders: ${holders.size}`);
         } catch (error) {
             console.error(`Error processing blocks ${startBlock}-${endBlock}:`, error);
         }
     }
     
-    return Array.from(holders);
+    return Array.from(recipients);
 }
 
-// First, set up your token contracts
-const playerAContract = new ethers.Contract(TOKENS.PLAYER_A, ERC20_ABI, provider);
-const playerBContract = new ethers.Contract(TOKENS.PLAYER_B, ERC20_ABI, provider);
-const drawContract = new ethers.Contract(TOKENS.DRAW, ERC20_ABI, provider);
-
-// You might want to set a reasonable fromBlock, perhaps when tokens were deployed
-const fromBlock = 20065380; // Replace with actual deployment block
-
-// Fetch all holders
-async function getAllHolders() {
-    try {
-        console.log('Fetching token holders...');
-        
-        const [playerAHolders, playerBHolders, drawHolders] = await Promise.all([
-            getTokenHolders(playerAContract, fromBlock),
-            getTokenHolders(playerBContract, fromBlock),
-            getTokenHolders(drawContract, fromBlock)
-        ]);
-
-        // Combine all unique addresses
-        const allHolders = [...new Set([
-            ...playerAHolders,
-            ...playerBHolders,
-            ...drawHolders
-        ])];
-
-        console.log(`Found ${allHolders.length} unique holders`);
-        console.log(`Player A holders: ${playerAHolders.length}`);
-        console.log(`Player B holders: ${playerBHolders.length}`);
-        console.log(`Draw holders: ${drawHolders.length}`);
-
-        return allHolders;
-    } catch (error) {
-        console.error('Error fetching holders:', error);
-        return [];
-    }
-}
-
+// Usage
 async function main() {
-    const addressesToCheck = await getAllHolders();
-    console.log('Addresses to check:', addressesToCheck); 
-    //await getPoolAndTokenInfo(addressesToCheck);
+    const tokenAddresses = [TOKENS.PLAYER_A, TOKENS.PLAYER_B, TOKENS.DRAW];
+    const fromBlock = 16929866; // Starting block number for Base network
+    const recipients = await getVaultTransferRecipients(tokenAddresses, fromBlock);
+    console.log(`Total unique recipients: ${recipients.length}`);
+    await getPoolAndTokenInfo(recipients);
 }
 
 main()
