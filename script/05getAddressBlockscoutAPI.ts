@@ -95,6 +95,25 @@ async function main() {
     }
 }
 
+export async function getAddressFromBlockscout() {
+    const [playerAHolders, playerBHolders, drawHolders] = await Promise.all([
+        getTokenHolders(TOKENS.PLAYER_A),
+        getTokenHolders(TOKENS.PLAYER_B),
+        getTokenHolders(TOKENS.DRAW)
+    ]);
+
+    return {
+        playerA: playerAHolders,
+        playerB: playerBHolders,
+        draw: drawHolders,
+        uniqueAddresses: Array.from(new Set([
+            ...playerAHolders.map(h => h.address),
+            ...playerBHolders.map(h => h.address),
+            ...drawHolders.map(h => h.address)
+        ]))
+    };
+}
+
 main()
     .then(() => process.exit(0))
     .catch((error) => {
