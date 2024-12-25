@@ -62,24 +62,24 @@ async function runBatchSwap() {
   const address = await signer.getAddress();
   console.log("Account address:", address);
 
-  const value = String(1e6); // 1 Stable Token
+  const value = String(1e18); // 1 Stable Token
 
   const encodeBatchSwapData = Swaps.encodeBatchSwap({
     kind: SwapType.SwapExactIn,
     swaps: [
       {
         poolId:
-          "0x6d9553c8a05371a0c2b387e95db646ad8ba781fc000100000000000000000101",
+          "0xa04263c06c9a4bc4655a2caf251ee5b424c868b60001000000000000000001af",
         assetInIndex: 0,
         assetOutIndex: 1,
-        amount: String(1e6),
+        amount: String(1e18),
         userData: "0x",
       },
     ],
     assets: [
-      "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+      "0x2498e8059929e18e2a2cED4e32ef145fa2F4a744",
       //token Stable
-      "0x047B29b4F3e2c99A28073cF5c758775704F86807",
+      "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485",
       //token A
     ],
     funds: {
@@ -92,7 +92,7 @@ async function runBatchSwap() {
     deadline: Math.ceil(Date.now() / 1000) + 60,
   });
 
-  const tokenStable = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
+  const tokenStable = "0x2498e8059929e18e2a2cED4e32ef145fa2F4a744";
 
   //load token contract token Stable
 
@@ -102,7 +102,7 @@ async function runBatchSwap() {
     wallet2
   );
 
-  const tokenB = "0x047B29b4F3e2c99A28073cF5c758775704F86807";
+  const tokenB = "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485";
 
   //load token contract token B
   const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet2);
@@ -112,7 +112,7 @@ async function runBatchSwap() {
 
   console.log(
     "🐎 🐎 🐎 Stable Token 🐎 🐎 🐎  balance before swap:",
-    formatUnits(tokenStableBalance, 6)
+    formatUnits(tokenStableBalance, 18)
   );
   console.log("Token A balance before swap:", formatUnits(tokenBBalance, 18));
 
@@ -181,7 +181,7 @@ async function runBatchSwap() {
 
   console.log(
     "Token Stable balance after swap:",
-    formatUnits(tokenStableBalance, 6)
+    formatUnits(tokenStableBalance, 18)
   );
   console.log("Token A balance after swap:", formatUnits(tokenBBalance, 18));
 }

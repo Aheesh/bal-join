@@ -2,7 +2,7 @@
   "playerA": [
     {
       "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-      "balance": "581.658773617176747822"
+      "balance": "580.722737215078403083"
     },
     {
       "address": "0x83fAf728815eC62723206e7C9e63dddB432cF025",
@@ -10,17 +10,17 @@
     },
     {
       "address": "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad",
-      "balance": "2.830112687091733646"
+      "balance": "3.766149089190078385"
     }
   ],
   "playerB": [
     {
       "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-      "balance": "297.098986420031149148"
+      "balance": "292.366087733900005303"
     },
     {
       "address": "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad",
-      "balance": "1.928657766178300552"
+      "balance": "6.661556452309444397"
     },
     {
       "address": "0x83fAf728815eC62723206e7C9e63dddB432cF025",
@@ -30,11 +30,11 @@
   "draw": [
     {
       "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-      "balance": "98.081258958630550963"
+      "balance": "92.600347296673307214"
     },
     {
       "address": "0xA7A8ADaCefcfbA9A2EbD9D0B62Ade7DA839B0Dad",
-      "balance": "1.918741041369449037"
+      "balance": "7.399652703326692786"
     }
   ],
   "uniqueAddresses": [
