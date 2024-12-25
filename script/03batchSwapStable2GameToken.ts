@@ -24,6 +24,12 @@ const argv = yargs(hideBin(process.argv))
     default: "localhost",
     demandOption: true,
   })
+  .option("wallet", {
+    type: "number",
+    description: "Wallet number (2, 3, or 4) to use for swap",
+    choices: [2, 3, 4],
+    demandOption: true,
+  })
   .option("tokenIn", {
     type: "string",
     description: "Token address to swap from",
@@ -61,12 +67,32 @@ const provider = new ethers.providers.JsonRpcProvider(
 // get the signer account
 const pvtKey = process.env.ACCOUNT1_KEY;
 const pvtKey2 = process.env.ACCOUNT2_KEY;
-if (!pvtKey || !pvtKey2) {
-  throw new Error("ACCOUNT_KEY is not set");
+const pvtKey3 = process.env.ACCOUNT3_KEY;
+const pvtKey4 = process.env.ACCOUNT4_KEY;
+if (!pvtKey || !pvtKey2 || !pvtKey3 || !pvtKey4) {
+  throw new Error("ACCOUNT_KEY(s) is not set");
 }
 //Get the EOA wallets
 const wallet = new ethers.Wallet(pvtKey, provider);
 const wallet2 = new ethers.Wallet(pvtKey2, provider);
+const wallet3 = new ethers.Wallet(pvtKey3, provider);
+const wallet4 = new ethers.Wallet(pvtKey4, provider);
+
+// Select wallet based on CLI argument
+let selectedWallet: ethers.Wallet;
+switch (argv.wallet) {
+  case 2:
+    selectedWallet = wallet2;
+    break;
+  case 3:
+    selectedWallet = wallet3;
+    break;
+  case 4:
+    selectedWallet = wallet4;
+    break;
+  default:
+    throw new Error("Invalid wallet number. Must be 2, 3, or 4");
+}
 
 async function runBatchSwap() {
   const sdk = new BalancerSDK({
@@ -79,7 +105,7 @@ async function runBatchSwap() {
 
   const { contracts } = sdk;
 
-  const signer = provider.getSigner(wallet2.address);
+  const signer = provider.getSigner(selectedWallet.address);
   const address = await signer.getAddress();
   console.log("Account address:", address);
 
@@ -130,13 +156,13 @@ const value = parseFixed(argv.swapLimit, 18);
   const tokenStableContract = new ethers.Contract(
     tokenStable,
     tokenStableABI.abi,
-    wallet2
+    selectedWallet
   );
 
   const tokenB = argv.tokenOut;
 
   //load token contract token B
-  const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet2);
+  const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, selectedWallet);
 
   let tokenStableBalance = await tokenStableContract.balanceOf(address);
   let tokenBBalance = await tokenBContract.balanceOf(address);
@@ -201,7 +227,7 @@ const value = parseFixed(argv.swapLimit, 18);
     console.log("Vault allowance for TokenB from EOA ", vaultAllowanceTokenB);
   }
 
-  await wallet2.sendTransaction({
+  await selectedWallet.sendTransaction({
     data: encodeBatchSwapData,
     to: contracts.vault.address,
     value,
