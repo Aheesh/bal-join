@@ -42,7 +42,7 @@ async function swapToken() {
   //Get the EOA wallets
   const wallet = new ethers.Wallet(pvtKey, provider);
   const wallet2 = new ethers.Wallet(pvtKey2, provider);
-  const amountIn = "100000000";
+  const amountIn = "100000000000000000000";
 
   // get the address of the signer
   const signerAddress = await wallet.getAddress();
@@ -53,7 +53,7 @@ async function swapToken() {
   console.log("Signer address 2:", signerAddress2);
 
   //Controller Contract Address
-  const controllerAddress = "0x2b1C7Ed23718936Dc093994627791C5fcd2c7754";
+  const controllerAddress = "0xe8a1616ADbE364DCd41866228AE193C65eC2F6cA";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,

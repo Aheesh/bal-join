@@ -58,18 +58,18 @@ async function querySwap() {
   const address = await signer.getAddress();
   console.log("EOA Account address:", address);
 
-  const tokenIn = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
-  const tokenOut = "0xaA4eC2d86E61632E88Db93cf6D2a42E5f458DC99";
+  const tokenIn = "0x2498e8059929e18e2a2cED4e32ef145fa2F4a744";
+  const tokenOut = "0x021DBfF4A864Aa25c51F0ad2Cd73266Fde66199d";
   const amount = parseFixed("100", 18);
   const gasPrice = parseFixed("0", 18);
 
   const swaps = [
     {
       poolId:
-        "0xc8503e1a4e439800dea3424cbfc085cbeb6c3bfe000100000000000000000172",
+        "0xa04263c06c9a4bc4655a2caf251ee5b424c868b60001000000000000000001af",
       assetInIndex: 0,
       assetOutIndex: 1,
-      amount: String(100e18),
+      amount: String(1e18),
       userData: "0x",
     },
   ];
