@@ -10,6 +10,7 @@ dotenv.config();
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { BalancerSDK, Network, SwapType, Swaps } from "@balancer-labs/sdk";
 import { formatUnits, parseEther } from "@ethersproject/units";
+import { parseFixed } from "@ethersproject/bignumber";
 import { ethers } from "ethers";
 import tokenStableABI from "../abi/tokenStable.json";
 import tokenBABI from "../abi/PlayerBToken.json";
@@ -21,6 +22,26 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     description: "The network to connect to",
     default: "localhost",
+    demandOption: true,
+  })
+  .option("tokenIn", {
+    type: "string",
+    description: "Token address to swap from",
+    demandOption: true,
+  })
+  .option("tokenOut", {
+    type: "string",
+    description: "Token address to swap to",
+    demandOption: true,
+  })
+  .option("amount", {
+    type: "string",
+    description: "Amount to swap (in ether units)",
+    demandOption: true,
+  })
+  .option("swapLimit", {
+    type: "string",
+    description: "Swap limit value (in ether units)",
     demandOption: true,
   })
   .parseSync();
@@ -62,26 +83,36 @@ async function runBatchSwap() {
   const address = await signer.getAddress();
   console.log("Account address:", address);
 
-  const value = String(1e18); // 1 Stable Token
+  // Get poolId from .env file
+  const poolId = process.env.POOL_ID;
+  if (!poolId) {
+    throw new Error("POOL_ID is not set in .env file");
+  }
+
+   // Use CLI arguments for token addresses
+  const assets = [argv.tokenIn, argv.tokenOut];
+const swapAmount = parseFixed(argv.amount, 18);
+const value = parseFixed(argv.swapLimit, 18);
+
+  // Validate swap limit
+  if (swapAmount.gt(value)) {
+    throw new Error(
+      `Swap limit (${argv.swapLimit}) must be greater than or equal to amount (${argv.amount})`
+    );
+  }
 
   const encodeBatchSwapData = Swaps.encodeBatchSwap({
     kind: SwapType.SwapExactIn,
     swaps: [
       {
-        poolId:
-          "0xa04263c06c9a4bc4655a2caf251ee5b424c868b60001000000000000000001af",
+        poolId: poolId,
         assetInIndex: 0,
         assetOutIndex: 1,
-        amount: String(1e18),
+        amount: swapAmount.toString(),
         userData: "0x",
       },
     ],
-    assets: [
-      "0x2498e8059929e18e2a2cED4e32ef145fa2F4a744",
-      //token Stable
-      "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485",
-      //token A
-    ],
+    assets: assets,
     funds: {
       fromInternalBalance: false,
       recipient: address,
@@ -92,7 +123,7 @@ async function runBatchSwap() {
     deadline: Math.ceil(Date.now() / 1000) + 60,
   });
 
-  const tokenStable = "0x2498e8059929e18e2a2cED4e32ef145fa2F4a744";
+  const tokenStable = argv.tokenIn;
 
   //load token contract token Stable
 
@@ -102,7 +133,7 @@ async function runBatchSwap() {
     wallet2
   );
 
-  const tokenB = "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485";
+  const tokenB = argv.tokenOut;
 
   //load token contract token B
   const tokenBContract = new ethers.Contract(tokenB, tokenBABI.abi, wallet2);
@@ -126,7 +157,7 @@ async function runBatchSwap() {
     vaultAllowanceTokenStable
   );
 
-  if (vaultAllowanceTokenStable.lt(parseEther(value))) {
+  if (vaultAllowanceTokenStable.lt(parseEther(value.toString()))) {
     console.log(
       "Vault allowance for stable token is less than value for swap, approving...💸 💸 💸"
     );
@@ -153,7 +184,7 @@ async function runBatchSwap() {
   );
   console.log("Vault allowance for TokenB from EOA", vaultAllowanceTokenB);
 
-  if (vaultAllowanceTokenB.lt(parseEther(value))) {
+  if (vaultAllowanceTokenB.lt(parseEther(value.toString()))) {
     console.log(
       "Vault Token A allowance is less than value, approving...💸 💸 💸"
     );
