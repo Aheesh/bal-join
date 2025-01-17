@@ -67,7 +67,7 @@ async function swapToken() {
   console.log("Signer address 4:", signerAddress4);
 
   //Controller Contract Address
-  const controllerAddress = "0xe8a1616ADbE364DCd41866228AE193C65eC2F6cA";
+  const controllerAddress = "0xa313187690af88B0f78e76Df5B4c2Ce089639c01";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -89,7 +89,7 @@ async function swapToken() {
   // const tokenDraw = addresses[4];
   // console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[2];
+  const tokenStable = addresses[4];
   console.log("Stable Token:", tokenStable);
 
   //load token contract token Stable

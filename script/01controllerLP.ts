@@ -46,41 +46,69 @@ async function contollerLP() {
   const signerAddress = await wallet.getAddress();
   console.log("Signer address:", signerAddress);
 
+   //Controller Contract Address
+   const controllerAddress = "0x88c606925388F408cbFd86C2e245b6fD19714386";
+   const controllerContract = new ethers.Contract(
+     controllerAddress,
+     contractABI.abi,
+     wallet
+   );
+
   //TODO refactor from here onwards to use the info from the pool info.
   // The amount in array position and loop to check balance, transfer to controller and approve vault.
-  const amountIn = [
-    "300000000000000000000", //300 Token B
-    "1000000000000000000000",// 1000 Stable token
-    "600000000000000000000", //600 Token A
-    "100000000000000000000", //100 Draw Token
-  ];
-
-  //Controller Contract Address
-  const controllerAddress = "0xe8a1616ADbE364DCd41866228AE193C65eC2F6cA";
-  const controllerContract = new ethers.Contract(
-    controllerAddress,
-    contractABI.abi,
-    wallet
-  );
-
-  //Get the tokens in the managed pool contract
-  const [addresses, balance, totalBalance] =
-    await controllerContract.getPoolTokens();
+  const [addresses, balance, totalBalance] = await controllerContract.getPoolTokens();
   console.log("Pool Tokens Addresses: ", addresses);
-  console.log("Pool Tokens Amounts: ", balance);
-  console.log("Total Pool Tokens Amount: ", totalBalance);
 
-  const tokenA = addresses[3];
-  console.log("Token A: ", tokenA);
+  // Get token positions by fetching symbols
+  let tokenA, tokenB, tokenDraw, tokenStable;
+  let tokenPositions: {
+    tokenA?: number;
+    tokenB?: number;
+    tokenDraw?: number;
+    tokenStable?: number;
+  } = {};
 
-  const tokenB = addresses[1];
-  console.log("Token B: ", tokenB);
+  for (let i = 0; i < addresses.length; i++) {
+    const tokenContract = new ethers.Contract(addresses[i], tokenAABI.abi, wallet);
+    const symbol = await tokenContract.symbol();
+    
+    switch(symbol) {
+      case "PA":
+        tokenA = addresses[i];
+        tokenPositions.tokenA = i;
+        break;
+      case "PB":
+        tokenB = addresses[i];
+        tokenPositions.tokenB = i;
+        break;
+      case "DT":
+        tokenDraw = addresses[i];
+        tokenPositions.tokenDraw = i;
+        break;
+      case "ST":
+        tokenStable = addresses[i];
+        tokenPositions.tokenStable = i;
+        break;
+    }
+  }
 
-  const tokenDraw = addresses[4];
-  console.log("Token Draw: ", tokenDraw);
+  console.log("Token Positions:", tokenPositions);
 
-  const tokenStable = addresses[2];
-  console.log("Stable Token:", tokenStable);
+  // Use positions for amountIn array
+  const amountIn = new Array(addresses.length).fill("0");
+  if (tokenPositions.tokenDraw !== undefined) amountIn[tokenPositions.tokenDraw] = "180000000000000000000";
+  if (tokenPositions.tokenB !== undefined) amountIn[tokenPositions.tokenB] = "180000000000000000000";
+  if (tokenPositions.tokenA !== undefined) amountIn[tokenPositions.tokenA] = "140000000000000000000";
+  if (tokenPositions.tokenStable !== undefined) amountIn[tokenPositions.tokenStable] = "500000000000000000000";
+
+  console.log("Token Addresses:", addresses);
+  console.log("Token Amounts:", amountIn);
+  console.log("Controller Balances:");
+  for (let i = 0; i < addresses.length; i++) {
+    const token = new ethers.Contract(addresses[i], tokenAABI.abi, provider);
+    const balance = await token.balanceOf(controllerAddress);
+    console.log(`Token ${i}: ${ethers.utils.formatUnits(balance, 18)}`);
+  }
 
   //get the vaultID
   const vaultID = await controllerContract.getVault();
@@ -101,11 +129,11 @@ async function contollerLP() {
   );
 
   //To prevent multiple approvals of Token A and transfer to Controller
-  if (BigInt(vaultAllowanceTokenA.toHexString()) < BigInt(amountIn[2])) {
+  if (BigInt(vaultAllowanceTokenA.toHexString()) < BigInt(tokenPositions.tokenA !== undefined ? amountIn[tokenPositions.tokenA] : "0")) {
     //transfer tokenA to Controller
     const transferATx = await tokenAContract.transfer(
       controllerAddress,
-      BigInt(amountIn[2]) - BigInt(vaultAllowanceTokenA.toHexString()),
+      tokenPositions.tokenA !== undefined ? amountIn[tokenPositions.tokenA] : "0",
       {
         gasLimit: 500000,
       }
@@ -113,7 +141,7 @@ async function contollerLP() {
     console.log(
       "Transfer of token A to Controller transaction sent:%s amount:%s",
       transferATx.hash,
-      amountIn[2]
+      tokenPositions.tokenA !== undefined ? amountIn[tokenPositions.tokenA] : "0"
     );
 
     const transferReceiptA = await transferATx.wait();
@@ -133,7 +161,7 @@ async function contollerLP() {
     //Controller approve Vault to transfer TokenA
     const vaultTokenAFromContoller = await controllerContract.approveVault(
       tokenA,
-      amountIn[2]
+      tokenPositions.tokenA !== undefined ? amountIn[tokenPositions.tokenA] : "0"
     );
   }
   //Check the Vault allowance for Token A from Controller
@@ -161,16 +189,19 @@ async function contollerLP() {
     BigInt(vaultAllowanceTokenB.toHexString())
   );
 
-  if (BigInt(vaultAllowanceTokenB.toHexString()) < BigInt(amountIn[0])) {
+  if (BigInt(vaultAllowanceTokenB.toHexString()) < BigInt(tokenPositions.tokenB !== undefined ? amountIn[tokenPositions.tokenB] : "0")) {
     //Transfer Token B from EOA to Controller
     const transferBTx = await tokenBContract.transfer(
       controllerAddress,
-      BigInt(amountIn[0]) - BigInt(vaultAllowanceTokenB.toHexString()) //Differenece in the amount transferred to controller contract
+      tokenPositions.tokenB !== undefined ? amountIn[tokenPositions.tokenB] : "0",
+      {
+        gasLimit: 500000,
+      }
     );
     console.log(
       "Transfer of Token B to Controller transaction sent:%s amount:%s",
       transferBTx.hash,
-      amountIn[0]
+      tokenPositions.tokenB !== undefined ? amountIn[tokenPositions.tokenB] : "0"
     );
 
     const transferReceiptB = await transferBTx.wait();
@@ -190,7 +221,7 @@ async function contollerLP() {
     //Controller approve Vault to transfer TokenB
     const vaultTokenBFromContoller = await controllerContract.approveVault(
       tokenB,
-      amountIn[0]
+      tokenPositions.tokenB !== undefined ? amountIn[tokenPositions.tokenB] : "0"
     );
   }
   //Check the Vault allowance for Token B from Controller
@@ -220,16 +251,16 @@ async function contollerLP() {
     vaultAllowanceTokenDraw.toHexString(),
     BigInt(vaultAllowanceTokenDraw.toHexString())
   );
-  if (BigInt(vaultAllowanceTokenDraw.toHexString()) < BigInt(amountIn[3])) {
+  if (BigInt(vaultAllowanceTokenDraw.toHexString()) < BigInt(tokenPositions.tokenDraw !== undefined ? amountIn[tokenPositions.tokenDraw] : "0")) {
     //Transfer Token Draw from EOA to Controller
     const transferDrawTx = await tokenDrawContract.transfer(
       controllerAddress,
-      BigInt(amountIn[3]) - BigInt(vaultAllowanceTokenDraw.toHexString()) // Difference in the amount transferred to controller contract
+      tokenPositions.tokenDraw !== undefined ? amountIn[tokenPositions.tokenDraw] : "0"
     );
     console.log(
       "Transfer of Token Draw to Controller transaction sent:%s amount:%s",
       transferDrawTx.hash,
-      amountIn[3]
+      tokenPositions.tokenDraw !== undefined ? amountIn[tokenPositions.tokenDraw] : "0"
     );
 
     const transferReceiptDraw = await transferDrawTx.wait();
@@ -249,7 +280,7 @@ async function contollerLP() {
     //Controller approve Vault to transfer Draw
     const vaultTokenDrawFromContoller = await controllerContract.approveVault(
       tokenDraw,
-      amountIn[3] // Token Draw
+      tokenPositions.tokenDraw !== undefined ? amountIn[tokenPositions.tokenDraw] : "0"
     );
   }
   //Check the Vault allowance for Token Draw from Controller
@@ -282,16 +313,16 @@ async function contollerLP() {
     BigInt(vaultAllowanceTokenStable.toHexString())
   );
 
-  if (BigInt(vaultAllowanceTokenStable.toHexString()) < BigInt(amountIn[1])) {
+  if (BigInt(vaultAllowanceTokenStable.toHexString()) < BigInt(tokenPositions.tokenStable !== undefined ? amountIn[tokenPositions.tokenStable] : "0")) {
     //Transfer Stable Token from EOA to Controller
     const transferStableTx = await tokenStableContract.transfer(
       controllerAddress,
-      BigInt(amountIn[1]) - BigInt(vaultAllowanceTokenStable.toHexString()) //  Difference in the amount transferred to controller contract DEGEN or STABLE
+      tokenPositions.tokenStable !== undefined ? amountIn[tokenPositions.tokenStable] : "0"
     );
     console.log(
       "Transfer of Token Stable to Controller transaction sent:%s amount:%s",
       transferStableTx.hash,
-      amountIn[1]
+      tokenPositions.tokenStable !== undefined ? amountIn[tokenPositions.tokenStable] : "0"
     );
 
     const transferReceiptStable = await transferStableTx.wait();
@@ -310,7 +341,7 @@ async function contollerLP() {
     //Controller approve Vault to transfer Stable Token
     const vaultTokenStableFromContoller = await controllerContract.approveVault(
       tokenStable,
-      amountIn[1] // Stable Token Transfer
+      tokenPositions.tokenStable !== undefined ? amountIn[tokenPositions.tokenStable] : "0"
     );
   }
   //Check the Vault allowance for stable token from Controller
@@ -323,39 +354,55 @@ async function contollerLP() {
     vaultAllowanceTokenStable
   );
 
-  // Sending the function call to the contract
+  // Debug logs before init
+  console.log("\n=== Debug Info Before Init ===");
+  
+  // 1. Log Pool Configuration
+  console.log("\nPool Configuration:");
   const poolID = await controllerContract.getPoolId();
-  //   await txResponse.wait();
-  console.log("Controller get PoolID ", poolID);
-
+  console.log("Pool ID:", poolID);
   const poolSpecialization = await controllerContract.getPoolSpecialization();
-  console.log("Pool Specialization: ", poolSpecialization);
+  console.log("Pool Specialization:", poolSpecialization);
 
-  const joinExitEnabled = await controllerContract.getJoinExitEnabled();
-  console.log("Join Exit Enabled: ", joinExitEnabled);
-
-  const swapEnabled = await controllerContract.getSwapEnabled();
-  console.log("Swap Enabled: ", swapEnabled);
-
-  //Check if Joins or Swap's are disabled for the managed pool
-  if (!joinExitEnabled || !swapEnabled) {
-    const setJoinExitEnabled = await controllerContract.setJoinExitEnabled(
-      true,
-      {
-        gasLimit: 500000,
-      }
-    );
-    await setJoinExitEnabled.wait();
-    console.log(
-      "Set Join Exit Enabled: ",
-      await controllerContract.getJoinExitEnabled()
-    );
+  // 2. Log Token Order and Amounts
+  console.log("\nToken Details:");
+  for (let i = 0; i < addresses.length; i++) {
+    const tokenContract = new ethers.Contract(addresses[i], tokenAABI.abi, provider);
+    const [symbol, decimals, balance, allowance] = await Promise.all([
+      tokenContract.symbol(),
+      tokenContract.decimals(),
+      tokenContract.balanceOf(controllerAddress),
+      tokenContract.allowance(controllerAddress, vaultID)
+    ]);
+    
+    console.log(`\nToken ${i + 1}:`);
+    console.log(`- Address: ${addresses[i]}`);
+    console.log(`- Symbol: ${symbol}`);
+    console.log(`- Init Amount: ${ethers.utils.formatUnits(amountIn[i], decimals)}`);
+    console.log(`- Controller Balance: ${ethers.utils.formatUnits(balance, decimals)}`);
+    console.log(`- Vault Allowance: ${ethers.utils.formatUnits(allowance, decimals)}`);
   }
 
+  // 3. Log Controller and Vault Status
+  console.log("\nController Status:");
+  const joinExitEnabled = await controllerContract.getJoinExitEnabled();
+  const swapEnabled = await controllerContract.getSwapEnabled();
+  console.log("Join/Exit Enabled:", joinExitEnabled);
+  console.log("Swap Enabled:", swapEnabled);
+  console.log("\n============================\n");
+
+  // Create amounts array without [0] position
+  const poolAmounts = amountIn.slice(1);  // Remove first amount
+
+  console.log("\nPool Initialization Data:");
+  console.log("Tokens:", addresses);
+  console.log("Amounts:", poolAmounts);
+
+  // Use addresses (unchanged) and filtered amounts for pool initialization
   const initPool = await controllerContract.initPool(
     addresses,
-    amountIn,
-    { gasLimit: 900010 } // Set the gas limit for the transaction
+    poolAmounts,
+    { gasLimit: 900010 }
   );
   await initPool.wait();
   console.log("Init Pool: ", initPool.hash);

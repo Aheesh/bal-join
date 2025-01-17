@@ -71,7 +71,7 @@ async function checkBalances() {
   console.log(`Checking balances for wallet: ${selectedWallet.address}`);
 
   //Controller Contract Address
-  const controllerAddress = "0xe8a1616ADbE364DCd41866228AE193C65eC2F6cA";
+  const controllerAddress = "0xa313187690af88B0f78e76Df5B4c2Ce089639c01";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
