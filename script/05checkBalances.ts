@@ -71,31 +71,30 @@ async function checkBalances() {
   console.log(`Checking balances for wallet: ${selectedWallet.address}`);
 
   //Controller Contract Address
-  const controllerAddress = "0xe8a1616ADbE364DCd41866228AE193C65eC2F6cA";
+  const controllerAddress = "0xa313187690af88B0f78e76Df5B4c2Ce089639c01";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
     selectedWallet
   );
 
-  const [addresses] =
-    await controllerContract.getPoolTokens();
+  const [addresses] = await controllerContract.getPoolTokens();
   console.log("Pool Tokens Addresses: ", addresses);
  
-
   // Check balances for tokens at indices 1 to 4
   for (let i = 1; i <= 4; i++) {
     const tokenAddress = addresses[i];
     const tokenContract = new ethers.Contract(tokenAddress, tokenAABI.abi, provider);
 
-    const [symbol, balance] = await Promise.all([
+    const [symbol, walletBalance, controllerBalance] = await Promise.all([
       tokenContract.symbol(),
-      tokenContract.balanceOf(selectedWallet.address)
+      tokenContract.balanceOf(selectedWallet.address),
+      tokenContract.balanceOf(controllerAddress)
     ]);
 
-    const balanceInEth = ethers.utils.formatUnits(balance, 18);
-    console.log(`Token ${symbol} (${tokenAddress})`);
-    console.log(`Balance: ${balanceInEth} ${symbol}`);
+    console.log(`\nToken ${symbol} (${tokenAddress})`);
+    console.log(`Wallet Balance: ${ethers.utils.formatUnits(walletBalance, 18)} ${symbol}`);
+    console.log(`Controller Balance: ${ethers.utils.formatUnits(controllerBalance, 18)} ${symbol}`);
     console.log('------------------------');
   }
 
