@@ -47,7 +47,7 @@ async function contollerLP() {
   console.log("Signer address:", signerAddress);
 
    //Controller Contract Address
-   const controllerAddress = "0x88c606925388F408cbFd86C2e245b6fD19714386";
+   const controllerAddress = "0xaE0b23C9a28Ab1959D2a7cc5117bB5c65246ff06";
    const controllerContract = new ethers.Contract(
      controllerAddress,
      contractABI.abi,

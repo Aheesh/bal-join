@@ -1,5 +1,7 @@
 // This script is used to transfer tokens from the deployer to the wallet 2. 
-//The current version transfers 1000 stable tokens divided equallto the wallet 2, 3 and 4.
+//The current version transfers 100 stable tokens divided equallto the wallet 2, 3 and 4.
+//TODO: fetch the stable token address from the controller progrmatically
+
 import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers } from "ethers";
@@ -32,7 +34,7 @@ async function swapToken() {
   const provider = new ethers.providers.JsonRpcProvider(
     network === "sepolia"
       ? `https://eth-sepolia.g.alchemy.com/v2/${providerApiKey}`
-      : "http://127.0.0.1:8545/"
+      : "http://0.0.0.0:8545/"
   );
 
   // get the signer account
@@ -67,7 +69,7 @@ async function swapToken() {
   console.log("Signer address 4:", signerAddress4);
 
   //Controller Contract Address
-  const controllerAddress = "0xa313187690af88B0f78e76Df5B4c2Ce089639c01";
+  const controllerAddress = "0xaE0b23C9a28Ab1959D2a7cc5117bB5c65246ff06";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -89,7 +91,7 @@ async function swapToken() {
   // const tokenDraw = addresses[4];
   // console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[4];
+  const tokenStable = addresses[1]; //TODO fetch the stable token  address from the controller progrmatically
   console.log("Stable Token:", tokenStable);
 
   //load token contract token Stable

@@ -1,4 +1,5 @@
 // Check balances for tokens in the pool requires the controller contract address
+//TODO fetch the controller address.
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -71,7 +72,7 @@ async function checkBalances() {
   console.log(`Checking balances for wallet: ${selectedWallet.address}`);
 
   //Controller Contract Address
-  const controllerAddress = "0xa313187690af88B0f78e76Df5B4c2Ce089639c01";
+  const controllerAddress = "0xaE0b23C9a28Ab1959D2a7cc5117bB5c65246ff06";
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,

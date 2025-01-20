@@ -61,7 +61,7 @@ const providerApiKey = process.env.INFURA_API_KEY;
 const provider = new ethers.providers.JsonRpcProvider(
   network === "sepolia"
     ? `https://sepolia.infura.io/v3/${providerApiKey}`
-    : "http://127.0.0.1:8545/"
+    : "http://0.0.0.0:8545/"
 );
 
 // get the signer account
@@ -100,7 +100,7 @@ async function runBatchSwap() {
     rpcUrl:
       argv.network === "sepolia"
         ? `https://sepolia.infura.io/v3/${providerApiKey}`
-        : "http://127.0.0.1:8545",
+        : "http://0.0.0.0:8545",
   });
 
   const { contracts } = sdk;
@@ -146,7 +146,7 @@ const value = parseFixed(argv.swapLimit, 18);
       toInternalBalance: false,
     },
     limits: [value, "0"],
-    deadline: Math.ceil(Date.now() / 1000) + 60,
+    deadline: Math.ceil(Date.now() / 1000) + 300,
   });
 
   const tokenStable = argv.tokenIn;
