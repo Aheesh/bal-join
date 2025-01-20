@@ -47,7 +47,10 @@ async function contollerLP() {
   console.log("Signer address:", signerAddress);
 
    //Controller Contract Address
-   const controllerAddress = "0xaE0b23C9a28Ab1959D2a7cc5117bB5c65246ff06";
+   const controllerAddress = process.env.MANAGED_POOL_CONTROLLER_ADDRESS
+   if (!controllerAddress) {
+    throw new Error("MANAGED_POOL_CONTROLLER_ADDRESS not set in .env file");
+  }
    const controllerContract = new ethers.Contract(
      controllerAddress,
      contractABI.abi,
@@ -95,6 +98,7 @@ async function contollerLP() {
   console.log("Token Positions:", tokenPositions);
 
   // Use positions for amountIn array
+  //TODO: fetch the amountIn from the controller progrmatically
   const amountIn = new Array(addresses.length).fill("0");
   if (tokenPositions.tokenDraw !== undefined) amountIn[tokenPositions.tokenDraw] = "180000000000000000000";
   if (tokenPositions.tokenB !== undefined) amountIn[tokenPositions.tokenB] = "180000000000000000000";

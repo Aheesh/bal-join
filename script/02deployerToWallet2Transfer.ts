@@ -68,8 +68,11 @@ async function swapToken() {
   const signerAddress4 = await wallet4.getAddress();
   console.log("Signer address 4:", signerAddress4);
 
-  //Controller Contract Address
-  const controllerAddress = "0xaE0b23C9a28Ab1959D2a7cc5117bB5c65246ff06";
+ //Controller Contract Address
+ const controllerAddress = process.env.MANAGED_POOL_CONTROLLER_ADDRESS
+ if (!controllerAddress) {
+  throw new Error("MANAGED_POOL_CONTROLLER_ADDRESS not set in .env file");
+}
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,
@@ -91,16 +94,36 @@ async function swapToken() {
   // const tokenDraw = addresses[4];
   // console.log("Token Draw: ", tokenDraw);
 
-  const tokenStable = addresses[1]; //TODO fetch the stable token  address from the controller progrmatically
+  // Create an array to store token contracts and their symbols
+  const tokenContracts = await Promise.all(
+    addresses.map(async (address: string) => {
+      const contract = new ethers.Contract(
+        address,
+        tokenStableABI.abi, // Assuming this ABI has standard ERC20 functions
+        wallet
+      );
+      const symbol = await contract.symbol();
+      return { address, symbol, contract };
+    })
+  );
+
+  // Find the stable token by its symbol (e.g., "USDC" or "DAI")
+  const stableToken = tokenContracts.find(token => 
+    token.symbol === "USDC" || // Add your stable token symbol here
+    token.symbol === "ST" ||
+    token.symbol === "DEGEN" ||
+    token.symbol === "USDT"
+  );
+
+  if (!stableToken) {
+    throw new Error("Stable token not found in pool");
+  }
+
+  const tokenStable = stableToken.address;
+  const tokenStableContract = stableToken.contract;
   console.log("Stable Token:", tokenStable);
 
   //load token contract token Stable
-
-  const tokenStableContract = new ethers.Contract(
-    tokenStable,
-    tokenStableABI.abi,
-    wallet
-  );
 
   // Transfer to multiple wallets
   const wallets = [wallet2, wallet3, wallet4];

@@ -71,8 +71,11 @@ async function checkBalances() {
   // First verify we're connected to the right network
   console.log(`Checking balances for wallet: ${selectedWallet.address}`);
 
-  //Controller Contract Address
-  const controllerAddress = "0xaE0b23C9a28Ab1959D2a7cc5117bB5c65246ff06";
+   //Controller Contract Address
+ const controllerAddress = process.env.MANAGED_POOL_CONTROLLER_ADDRESS
+ if (!controllerAddress) {
+  throw new Error("MANAGED_POOL_CONTROLLER_ADDRESS not set in .env file");
+}
   const controllerContract = new ethers.Contract(
     controllerAddress,
     contractABI.abi,

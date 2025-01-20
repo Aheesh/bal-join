@@ -227,12 +227,18 @@ const value = parseFixed(argv.swapLimit, 18);
     console.log("Vault allowance for TokenB from EOA ", vaultAllowanceTokenB);
   }
 
-  await selectedWallet.sendTransaction({
+  const swapTx = await selectedWallet.sendTransaction({
     data: encodeBatchSwapData,
     to: contracts.vault.address,
     value,
   });
 
+  // Wait for the transaction to be mined
+  console.log("Waiting for swap transaction to be mined...");
+  await swapTx.wait();
+  console.log("Swap transaction confirmed!");
+
+  // Now fetch the new balances
   tokenStableBalance = await tokenStableContract.balanceOf(address);
   tokenBBalance = await tokenBContract.balanceOf(address);
 
@@ -240,7 +246,7 @@ const value = parseFixed(argv.swapLimit, 18);
     "Token Stable balance after swap:",
     formatUnits(tokenStableBalance, 18)
   );
-  console.log("Token A balance after swap:", formatUnits(tokenBBalance, 18));
+  console.log("Token Out balance after swap:", formatUnits(tokenBBalance, 18));
 }
 
 try {
