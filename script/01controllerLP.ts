@@ -5,7 +5,7 @@ import contractABI from "../abi/Controller.json";
 import tokenAABI from "../abi/PlayerAToken.json";
 import tokenBABI from "../abi/PlayerBToken.json";
 import tokenDrawABI from "../abi/DrawToken.json";
-import tokenStableABI from "../abi/tokenStable.json";
+import tokenStableABI from "../abi/tokenDegen.json";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -98,6 +98,7 @@ async function contollerLP() {
         tokenPositions.tokenDraw = i;
         break;
       case "ST":
+      case "DEGEN":
         tokenStable = addresses[i];
         tokenPositions.tokenStable = i;
         break;
@@ -109,10 +110,10 @@ async function contollerLP() {
   // Use positions for amountIn array
   //TODO: fetch the amountIn from the controller progrmatically
   const amountIn = new Array(addresses.length).fill("0");
-  if (tokenPositions.tokenDraw !== undefined) amountIn[tokenPositions.tokenDraw] = "180000000000000000000";
-  if (tokenPositions.tokenB !== undefined) amountIn[tokenPositions.tokenB] = "180000000000000000000";
-  if (tokenPositions.tokenA !== undefined) amountIn[tokenPositions.tokenA] = "140000000000000000000";
-  if (tokenPositions.tokenStable !== undefined) amountIn[tokenPositions.tokenStable] = "500000000000000000000";
+  if (tokenPositions.tokenDraw !== undefined) amountIn[tokenPositions.tokenDraw] = "18000000000000000000";
+  if (tokenPositions.tokenB !== undefined) amountIn[tokenPositions.tokenB] = "18000000000000000000";
+  if (tokenPositions.tokenA !== undefined) amountIn[tokenPositions.tokenA] = "14000000000000000000";
+  if (tokenPositions.tokenStable !== undefined) amountIn[tokenPositions.tokenStable] = "50000000000000000000";
 
   console.log("Token Addresses:", addresses);
   console.log("Token Amounts:", amountIn);
