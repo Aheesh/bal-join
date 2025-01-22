@@ -35,11 +35,20 @@ async function contollerLP() {
       : "http://127.0.0.1:8545/"
   );
 
-  // get the signer account
-  const pvtKey = process.env.ACCOUNT1_KEY;
-  if (!pvtKey) {
-    throw new Error("ACCOUNT1_KEY is not set");
+  // get the signer account based on network
+  let pvtKey;
+  if (network === "base") {
+    pvtKey = process.env.BASE_DEPLOYER_KEY;
+    if (!pvtKey) {
+      throw new Error("BASE_DEPLOYER_KEY is not set");
+    }
+  } else {
+    pvtKey = process.env.ACCOUNT1_KEY;
+    if (!pvtKey) {
+      throw new Error("ACCOUNT1_KEY is not set");
+    }
   }
+  
   const wallet = new ethers.Wallet(pvtKey, provider);
 
   // get the address of the signer
